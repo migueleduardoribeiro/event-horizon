@@ -17,8 +17,9 @@ Avalie confluências, isole anomalias (como preço subindo com Open Interest exc
 3. "veredito": Exatamente um de "COMPRAR", "VENDER" ou "HOLD".
 4. "justificativa_analitica": Um resumo executivo de até 4 frases explicando os fatores determinantes para a tomada de decisão.
 5. "cenario_atual": Uma breve análise em texto do cenário cripto/macro atual.
-6. "eventos_mercado": Uma lista de eventos geopolíticos/macro recentes. Cada objeto da lista deve ter as chaves "evento" (string curta), "importancia" ("Alta", "Média", ou "Baixa") e "impacto_descricao" (string explicativa).
+6. "eventos_mercado": Uma lista com NO MÍNIMO 3 eventos geopolíticos/macro/cripto recentes distintos. Cada objeto da lista deve ter as chaves "evento" (string curta), "importancia" ("Alta", "Média", ou "Baixa") e "impacto_descricao" (string explicativa).
 7. "previsao_30d": Array com exatamente 30 dias de previsão de preços diários estimada até o futuro (apenas estimativa direcional plausível). Cada objeto: "dia" (int 1 a 30) e "preco" (float, sendo o preço atual o ponto de partida do dia 1).
+8. "sinais_trading": Um objeto contendo sugestão de trade com as chaves: "tipo" (exatamente "LONG", "SHORT", ou "NEUTRO"), "entrada" (string com a faixa ou preço de entrada), "alvos_lucro" (lista de strings com os alvos de take profit), "stop_loss" (string com o preço de invalidação) e "risco_recompensa" (string com a relação de risco/retorno, ex: "1:3").
 
 IMPORTANTE:
 - Responda APENAS com o JSON válido, sem crases markdown (```json), e sem texto adicional fora do JSON.
@@ -62,7 +63,7 @@ async def fetch_latest_news(client, coin: str) -> str:
         logger.info(f"Buscando notícias recentes para {coin} via Gemini Search...")
         response = client.models.generate_content(
             model=settings.gemini_model,
-            contents=f"Busque as notícias mais recentes (últimas 24 horas) sobre {coin}, fatores macroeconômicos e geopolíticos globais que afetam o mercado cripto. Retorne um resumo conciso com os principais eventos.",
+            contents=f"Busque as notícias mais recentes (últimas 24 horas) sobre {coin}, fatores macroeconômicos e geopolíticos globais que afetam o mercado cripto. Retorne um resumo conciso contendo PELO MENOS 3 notícias ou eventos distintos e detalhados.",
             config=types.GenerateContentConfig(
                 tools=[{"google_search": {}}],
                 temperature=0.3,
@@ -90,6 +91,7 @@ async def generate_analysis(indicators: dict, coin: str = "BTC") -> dict:
     recent_news = await fetch_latest_news(client, coin)
     
     # 2. Inject news into the payload for the final analysis
+    logger.info(f"Injecting recent news into analysis payload for {coin}...")
     analysis_payload = indicators.copy()
     analysis_payload["noticias_recentes"] = recent_news
 
@@ -103,6 +105,7 @@ async def generate_analysis(indicators: dict, coin: str = "BTC") -> dict:
         f"{json.dumps(analysis_payload, indent=2, ensure_ascii=False)}"
     )
 
+    logger.info(f"Sending prompt to Gemini API for {coin} analysis (max tokens: 8192)...")
     response = client.models.generate_content(
         model=settings.gemini_model,
         contents=prompt,
@@ -115,17 +118,21 @@ async def generate_analysis(indicators: dict, coin: str = "BTC") -> dict:
     )
 
     if not response.text:
+        logger.error(f"Gemini returned an empty response for {coin}")
         raise RuntimeError("Gemini retornou resposta vazia")
+    
+    logger.success(f"Received valid response from Gemini for {coin}")
 
     result = _extract_json(response.text)
 
     # Validate expected fields
     required = [
         "sentimento_mercado", "forca_tendencia", "veredito", 
-        "justificativa_analitica", "cenario_atual", "eventos_mercado", "previsao_30d"
+        "justificativa_analitica", "cenario_atual", "eventos_mercado", "previsao_30d", "sinais_trading"
     ]
     missing = [f for f in required if f not in result]
     if missing:
+        logger.error(f"Gemini response for {coin} is missing required fields: {missing}")
         raise ValueError(f"Resposta do Gemini incompleta. Campos faltando: {missing}")
 
     # Enforce valid values

@@ -65,6 +65,14 @@ export interface ForecastPoint {
   preco: number;
 }
 
+export interface TradingSignal {
+  tipo: "LONG" | "SHORT" | "NEUTRO";
+  entrada: string;
+  alvos_lucro: string[];
+  stop_loss: string;
+  risco_recompensa: string;
+}
+
 export interface AnalysisVerdict {
   sentimento_mercado: "Bullish" | "Bearish" | "Neutro";
   forca_tendencia: number;
@@ -73,12 +81,14 @@ export interface AnalysisVerdict {
   cenario_atual: string;
   eventos_mercado: MarketEvent[];
   previsao_30d: ForecastPoint[];
+  sinais_trading: TradingSignal;
 }
 
 export interface AnalysisResponse {
   indicators: IndicatorsResponse;
   analysis: AnalysisVerdict | null;
   analysis_error: string | null;
+  type?: string;
 }
 
 // ─── UI Helper Types ─────────────────────────────────────────────────────────

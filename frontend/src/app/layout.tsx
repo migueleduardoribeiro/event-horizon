@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Event Horizon — BTC Confluence Dashboard",
   description:
-    "Real-time Bitcoin market analysis with 30+ confluence indicators and AI-powered verdict",
+    "Real-time market analysis with 30+ confluence indicators and AI-powered or Algorithmic verdicts",
 };
 
 export default function RootLayout({

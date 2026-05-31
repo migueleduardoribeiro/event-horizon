@@ -6,6 +6,14 @@ A predictive Bitcoin analysis dashboard that aggregates 20+ market indicators in
 
 The **Event Horizon** dashboard continuously monitors the state of the cryptocurrency market by pulling data across various domains: Technical, Derivatives, Sentiment, Macro, and On-Chain. It feeds this rich dataset into the Google Gemini API to produce an actionable, AI-driven market analysis. The application features a FastAPI backend for data aggregation and a dark-terminal-themed Next.js frontend for an immersive user experience.
 
+## 🧠 Analysis Modes
+
+The Event Horizon dashboard offers three distinct modes for market analysis, each catering to a different analytical approach:
+
+- **AI (Full Gemini):** Feeds all aggregated technical, derivatives, sentiment, macro, and on-chain indicators into the Google Gemini LLM. It leverages natural language reasoning to produce a nuanced, narrative-driven market analysis and a holistic **BUY**, **SELL**, or **HOLD** verdict.
+- **Algo (Deterministic Math):** Evaluates market conditions using a strict, rules-based mathematical scoring system. It scores various indicator categories objectively, bypassing the LLM entirely to produce a lightning-fast, purely quantitative verdict.
+- **Hybrid (Math + AI Macro Scoring):** Combines the objective precision of deterministic math with the contextual awareness of AI. The AI evaluates complex macroeconomic and sentiment narratives to generate a score, while the algorithm handles technical and derivatives data. These scores are then merged to produce a highly robust, comprehensive final verdict.
+
 ## 🛠️ Technologies Used
 
 ### Backend

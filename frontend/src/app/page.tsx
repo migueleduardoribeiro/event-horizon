@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [indicators, setIndicators] = useState<IndicatorsResponse | null>(null);
   const [verdict, setVerdict] = useState<AnalysisVerdict | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisType, setAnalysisType] = useState<"ai" | "algo" | "hybrid" | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoadingIndicators, setIsLoadingIndicators] = useState(false);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
@@ -36,12 +37,13 @@ export default function DashboardPage() {
   }, []);
 
   /* ─── Run Full Analysis ─────────────────────────────────────────── */
-  const handleRunAnalysis = useCallback(async () => {
+  const handleRunAnalysis = useCallback(async (type: "ai" | "algo" | "hybrid") => {
     setIsLoadingAnalysis(true);
     setFetchError(null);
     setAnalysisError(null);
+    setAnalysisType(type);
     try {
-      const data = await fetchAnalysis(selectedCoin);
+      const data = await fetchAnalysis(selectedCoin, type);
       setIndicators(data.indicators);
       setVerdict(data.analysis);
       setAnalysisError(data.analysis_error);
@@ -90,7 +92,7 @@ export default function DashboardPage() {
         </button>
 
         <button
-          onClick={handleRunAnalysis}
+          onClick={() => handleRunAnalysis("ai")}
           disabled={isLoading}
           className="flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-lg
                      bg-neon-green/10 hover:bg-neon-green/20 border border-neon-green/30 hover:border-neon-green/50
@@ -98,14 +100,52 @@ export default function DashboardPage() {
                      disabled:opacity-40 disabled:cursor-not-allowed
                      shadow-[0_0_15px_rgba(0,255,136,0.1)] hover:shadow-[0_0_25px_rgba(0,255,136,0.2)]"
         >
-          {isLoadingAnalysis ? (
+          {isLoadingAnalysis && analysisType === "ai" ? (
             <LoadingSpinner size={14} />
           ) : (
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           )}
-          Run Analysis
+          Run AI Analysis
+        </button>
+
+        <button
+          onClick={() => handleRunAnalysis("algo")}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-lg
+                     bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50
+                     text-blue-400 transition-all duration-200
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_25px_rgba(59,130,246,0.2)]"
+        >
+          {isLoadingAnalysis && analysisType === "algo" ? (
+            <LoadingSpinner size={14} />
+          ) : (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          )}
+          Run Algo Analysis
+        </button>
+
+        <button
+          onClick={() => handleRunAnalysis("hybrid")}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-lg
+                     bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50
+                     text-purple-400 transition-all duration-200
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     shadow-[0_0_15px_rgba(168,85,247,0.1)] hover:shadow-[0_0_25px_rgba(168,85,247,0.2)]"
+        >
+          {isLoadingAnalysis && analysisType === "hybrid" ? (
+            <LoadingSpinner size={14} />
+          ) : (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          )}
+          Run Hybrid Analysis
         </button>
 
         {/* Connection error */}
@@ -113,6 +153,13 @@ export default function DashboardPage() {
           <span className="ml-auto flex items-center gap-1.5 text-[0.65rem] text-neon-red font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-neon-red animate-pulse" />
             {fetchError}
+          </span>
+        )}
+        {/* Loading text */}
+        {isLoadingAnalysis && analysisType === "ai" && !fetchError && (
+          <span className="ml-auto flex items-center gap-1.5 text-[0.65rem] text-neon-green/80 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
+            AI analysis may take up to 5 minutes...
           </span>
         )}
       </div>
@@ -138,21 +185,52 @@ export default function DashboardPage() {
               </h2>
               <p className="text-sm text-text-secondary leading-relaxed">
                 Aggregate 30+ market indicators across technical, derivatives, sentiment,
-                macro, and on-chain data — then get an AI-powered confluence verdict.
+                macro, and on-chain data — then choose between an AI-powered or deterministic Algorithmic verdict.
               </p>
             </div>
-            <button
-              onClick={handleRunAnalysis}
-              className="flex items-center gap-2.5 px-8 py-3 text-sm font-semibold rounded-xl
-                         bg-neon-green/10 hover:bg-neon-green/20 border border-neon-green/30 hover:border-neon-green/50
-                         text-neon-green transition-all duration-300
-                         shadow-[0_0_30px_rgba(0,255,136,0.1)] hover:shadow-[0_0_50px_rgba(0,255,136,0.2)]"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Launch Analysis
-            </button>
+            <div className="flex gap-4 mt-2">
+              <button
+                onClick={() => handleRunAnalysis("ai")}
+                className="flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl
+                           bg-neon-green/10 hover:bg-neon-green/20 border border-neon-green/30 hover:border-neon-green/50
+                           text-neon-green transition-all duration-300
+                           shadow-[0_0_30px_rgba(0,255,136,0.1)] hover:shadow-[0_0_50px_rgba(0,255,136,0.2)]"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                AI Analysis
+              </button>
+              <button
+                onClick={() => handleRunAnalysis("algo")}
+                className="flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl
+                           bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50
+                           text-blue-400 transition-all duration-300
+                           shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:shadow-[0_0_50px_rgba(59,130,246,0.2)]"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Algo Analysis
+              </button>
+              <button
+                onClick={() => handleRunAnalysis("hybrid")}
+                className="flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl
+                           bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50
+                           text-purple-400 transition-all duration-300
+                           shadow-[0_0_30px_rgba(168,85,247,0.1)] hover:shadow-[0_0_50px_rgba(168,85,247,0.2)]"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+                Hybrid Analysis
+              </button>
+            </div>
+            {isLoadingAnalysis && analysisType === "ai" && (
+              <p className="text-[0.7rem] text-neon-green/80 mt-1 font-mono animate-pulse">
+                AI analysis may take up to 5 minutes. Please wait...
+              </p>
+            )}
           </div>
         ) : (
           /* ── Dashboard Grid ────────────────────────────────────── */
@@ -191,6 +269,7 @@ export default function DashboardPage() {
                   analysisError={analysisError}
                   isLoading={isLoadingAnalysis}
                   coin={selectedCoin}
+                  analysisType={analysisType}
                 />
               </div>
 

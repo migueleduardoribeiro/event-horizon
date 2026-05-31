@@ -12,6 +12,7 @@ interface VerdictPanelProps {
   analysisError: string | null;
   isLoading: boolean;
   coin?: string;
+  analysisType?: "ai" | "algo" | "hybrid" | null;
 }
 
 function getVerdictGlowClass(v: string): string {
@@ -72,6 +73,7 @@ export default function VerdictPanel({
   analysisError,
   isLoading,
   coin = "BTC",
+  analysisType = "ai",
 }: VerdictPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
@@ -114,7 +116,7 @@ export default function VerdictPanel({
         try {
           await navigator.share({
             title: `${coin} Analysis - Event Horizon`,
-            text: `See my latest AI-generated confluence analysis for ${coin}.`,
+            text: `See my latest ${analysisType === 'algo' ? 'algorithmic' : analysisType === 'hybrid' ? 'hybrid' : 'AI-generated'} confluence analysis for ${coin}.`,
             files: [file],
           });
           return;
@@ -147,8 +149,12 @@ export default function VerdictPanel({
         </div>
         <div className="text-center">
           <p className="text-sm text-text-secondary">Analyzing market confluence…</p>
-          <p className="text-[0.6rem] text-text-muted mt-1 font-mono">
-            Fetching indicators + geopolitical scenario for {coin} (Gemini AI)
+          <p className="text-sm font-mono text-neon-green/80 mt-4 animate-pulse">
+            {analysisType === "algo" 
+              ? `Processing quantitative algorithmic analysis for ${coin}...`
+              : analysisType === "hybrid"
+              ? `Processing hybrid analysis (Algo + AI) for ${coin}...`
+              : `Fetching indicators + geopolitical scenario for ${coin} (Gemini AI)`}
           </p>
         </div>
       </div>
@@ -187,7 +193,7 @@ export default function VerdictPanel({
             Click <span className="text-white font-medium">&quot;Run Analysis&quot;</span> to generate
           </p>
           <p className="text-[0.6rem] text-text-muted mt-1">
-            AI verdict across 30+ indicators + macro scenarios
+            {analysisType === "algo" ? "Algorithmic verdict across quantitative metrics" : analysisType === "hybrid" ? "Hybrid analysis combining Algo + AI scoring" : "AI verdict across 30+ indicators + macro scenarios"}
           </p>
         </div>
       </div>
@@ -237,7 +243,7 @@ export default function VerdictPanel({
       >
         {/* ── Top: Verdict + Sentiment ────────────────────────────── */}
         <div className="flex flex-col items-center text-center gap-3">
-          <span className="section-label">AI Verdict</span>
+          <span className="section-label">{analysisType === "algo" ? "Algorithmic Verdict" : analysisType === "hybrid" ? "Hybrid Verdict" : "AI Verdict"}</span>
           <h2 className={`text-4xl md:text-5xl font-black tracking-tight font-mono ${getVerdictColor(verdict.veredito)}`}>
             {verdict.veredito === "COMPRAR" ? "BUY" : verdict.veredito === "VENDER" ? "SELL" : verdict.veredito}
           </h2>
@@ -260,6 +266,55 @@ export default function VerdictPanel({
           </p>
         </div>
 
+        {/* ── Trading Setup ──────────────────────────────────────── */}
+        {verdict.sinais_trading && (
+          <div className="flex flex-col gap-3 p-4 rounded-xl border border-white/10 bg-black/20">
+            <div className="flex items-center justify-between">
+              <span className="text-[0.75rem] font-bold text-text-muted uppercase tracking-wider mb-0">Trading Setup</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                verdict.sinais_trading.tipo === "LONG" ? "bg-neon-green/20 text-neon-green border border-neon-green/30" : 
+                verdict.sinais_trading.tipo === "SHORT" ? "bg-neon-red/20 text-neon-red border border-neon-red/30" : 
+                "bg-neon-amber/20 text-neon-amber border border-neon-amber/30"
+              }`}>
+                {verdict.sinais_trading.tipo}
+              </span>
+            </div>
+            
+            {verdict.sinais_trading.tipo !== "NEUTRO" ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.65rem] text-text-muted uppercase">Entry</span>
+                    <span className="text-sm text-white font-mono">{verdict.sinais_trading.entrada}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.65rem] text-text-muted uppercase">Stop Loss</span>
+                    <span className="text-sm text-neon-red font-mono">{verdict.sinais_trading.stop_loss}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1 mt-1">
+                  <span className="text-[0.65rem] text-text-muted uppercase">Take Profit Targets</span>
+                  <div className="flex flex-wrap gap-2">
+                    {verdict.sinais_trading.alvos_lucro?.map((alvo, idx) => (
+                      <span key={idx} className="px-2 py-1 text-xs bg-neon-green/10 text-neon-green rounded-md font-mono border border-neon-green/20">
+                        {alvo}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1 pt-2 border-t border-white/5">
+                  <span className="text-[0.65rem] text-text-muted uppercase">Risk/Reward:</span>
+                  <span className="text-xs text-white font-mono">{verdict.sinais_trading.risco_recompensa}</span>
+                </div>
+              </>
+            ) : (
+               <p className="text-xs text-text-muted italic">No clear trade setup at the moment. Wait for better confluence.</p>
+            )}
+          </div>
+        )}
+
         {/* ── Macro Scenario ─────────────────────────────────────── */}
         {verdict.cenario_atual && (
           <div className="flex flex-col gap-2 border-t border-white/10 pt-4">
@@ -276,7 +331,7 @@ export default function VerdictPanel({
         )}
 
         {/* ── Forecast Chart ─────────────────────────────────────── */}
-        {verdict.previsao_30d && verdict.previsao_30d.length > 0 && (
+        {analysisType !== "hybrid" && verdict.previsao_30d && verdict.previsao_30d.length > 0 && (
           <ForecastChart data={verdict.previsao_30d} />
         )}
       </div>
