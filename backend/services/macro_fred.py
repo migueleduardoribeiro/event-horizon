@@ -3,6 +3,7 @@
 import httpx
 import pandas as pd
 import numpy as np
+import asyncio
 
 from config import settings
 from services.technical import _fetch_klines
@@ -19,10 +20,15 @@ async def _fetch_fred_series(client: httpx.AsyncClient, series_id: str, limit: i
         "sort_order": "desc",
         "limit": limit
     }
-    resp = await client.get(url, params=params)
-    resp.raise_for_status()
-    data = resp.json()
-    return data.get("observations", [])
+    try:
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("observations", [])
+    except Exception as e:
+        from logger import logger
+        logger.warning(f"FRED API error for {series_id}: {e}")
+        return []
 
 def _get_trend(obs: list) -> str | None:
     if len(obs) < 2:
@@ -53,13 +59,19 @@ async def get_fred_macro_data(symbol: str = "BTCUSDT") -> dict:
         m2_obs = await _fetch_fred_series(client, "M2SL", 1)
         m2_value = float(m2_obs[0]["value"]) if m2_obs and m2_obs[0]["value"] != "." else None
 
+        await asyncio.sleep(0.5)
+
         # Fetch PAYEMS (Nonfarm Payrolls)
         nfp_obs = await _fetch_fred_series(client, "PAYEMS", 2)
         nfp_trend = _get_trend(nfp_obs)
 
+        await asyncio.sleep(0.5)
+
         # Fetch CPIAUCSL (CPI)
         cpi_obs = await _fetch_fred_series(client, "CPIAUCSL", 2)
         cpi_trend = _get_trend(cpi_obs)
+
+        await asyncio.sleep(0.5)
 
         # Fetch NASDAQ100 (Daily)
         ndx_obs = await _fetch_fred_series(client, "NASDAQ100", 30)
