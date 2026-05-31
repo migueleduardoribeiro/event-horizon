@@ -12,8 +12,8 @@ export async function fetchIndicators(coin: string = "BTC"): Promise<IndicatorsR
   return res.json();
 }
 
-export async function fetchAnalysis(coin: string = "BTC"): Promise<AnalysisResponse> {
-  const res = await fetch(`${API_BASE}/api/analysis?coin=${coin}`, {
+export async function fetchAnalysis(coin: string = "BTC", type: "ai" | "algo" | "hybrid" = "ai"): Promise<AnalysisResponse> {
+  const res = await fetch(`${API_BASE}/api/analysis?coin=${coin}&type=${type}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",

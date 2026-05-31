@@ -47,7 +47,7 @@ export default function IndicatorsSidebar({ data, coin = "BTC" }: IndicatorsSide
       <Section label="📊 Derivatives" items={derivatives} />
       <Section label="🧠 Sentiment" items={sentiment} />
       <Section label="🌍 Macro" items={macro} />
-      <Section label="⛓ On-Chain" items={onchain} />
+      {coin === "BTC" && <Section label="⛓ On-Chain" items={onchain} />}
     </aside>
   );
 }

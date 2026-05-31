@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import LivePriceTicker from "./LivePriceTicker";
 
 interface HeaderProps {
@@ -11,6 +12,16 @@ interface HeaderProps {
 const SUPPORTED_COINS = ["BTC", "ETH", "SOL", "XRP", "BNB"];
 
 export default function Header({ lastUpdated, coin, onCoinChange }: HeaderProps) {
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
       {/* Left — Logo / Brand */}
@@ -48,9 +59,9 @@ export default function Header({ lastUpdated, coin, onCoinChange }: HeaderProps)
       {/* Right — Price + timestamp */}
       <div className="flex items-center gap-6">
         <LivePriceTicker coin={coin} />
-        {lastUpdated && (
+        {currentTime && (
           <span className="text-[0.65rem] text-text-muted font-mono tabular-nums">
-            {lastUpdated.toLocaleTimeString()}
+            {currentTime.toLocaleTimeString()}
           </span>
         )}
       </div>

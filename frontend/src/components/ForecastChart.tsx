@@ -40,7 +40,7 @@ export default function ForecastChart({ data }: { data: ForecastPoint[] }) {
   return (
     <div className="mt-6 flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="section-label mb-0">Estimated Price Forecast (AI)</h3>
+        <h3 className="section-label mb-0">Estimated Price Forecast</h3>
         
         <div className="flex gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
           {[3, 7, 14, 30].map((d) => (
