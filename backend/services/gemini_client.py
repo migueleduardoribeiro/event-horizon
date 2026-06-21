@@ -66,7 +66,7 @@ async def fetch_latest_news(client, coin: str) -> str:
             contents=f"Busque as notícias mais recentes (últimas 24 horas) sobre {coin}, fatores macroeconômicos e geopolíticos globais que afetam o mercado cripto. Retorne um resumo conciso contendo PELO MENOS 3 notícias ou eventos distintos e detalhados.",
             config=types.GenerateContentConfig(
                 tools=[{"google_search": {}}],
-                temperature=0.3,
+                temperature=0.1,
             ),
         )
         return response.text or "Nenhuma notícia relevante encontrada."
@@ -111,8 +111,9 @@ async def generate_analysis(indicators: dict, coin: str = "BTC") -> dict:
         contents=prompt,
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.3,
-            max_output_tokens=8192,
+            temperature=0.1,
+            max_output_tokens=12288,
+            thinking_config=types.ThinkingConfig(thinking_budget_tokens=8192),
             response_mime_type="application/json",
         ),
     )
