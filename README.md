@@ -93,11 +93,14 @@ To spin up both the backend and frontend simultaneously using Docker Compose:
 
 ```bash
 # From the root directory
-docker compose up --build
+docker compose up -d --build
 ```
 
 - **Frontend Application:** `http://localhost:3000`
 - **Backend API Documentation:** `http://localhost:8000/docs`
+
+> [!NOTE]
+> **Hot-Reloading Enabled:** The Docker setup is configured with mapped volumes for both the frontend and backend. Any changes you make to the code locally will instantly reflect in the running containers without needing to rebuild.
 
 ## 📡 API Endpoints
 
