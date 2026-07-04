@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import indicators, analysis
+from routers import indicators, analysis, backtest
 from services.binance_ws import start_liquidation_websocket
 from logger import setup_logger, logger
 
@@ -52,6 +52,7 @@ app.add_middleware(
 # Include routers
 app.include_router(indicators.router)
 app.include_router(analysis.router)
+app.include_router(backtest.router)
 
 
 @app.exception_handler(Exception)
